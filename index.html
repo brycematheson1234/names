@@ -1,187 +1,805 @@
 <!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
 <html>
 <head>
-  <title>Baby Names Trends (1998-2000)</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-  <style>
-      body {
-          font-family: Arial, sans-serif;
-          margin: 20px;
-      }
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="">
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="https://unpkg.com/d3-area-label@1.0.0"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src='https://engaging-data.com/pages/scripts/arrayfunctions.js'></script>
+  <script src='aggbirths.js'></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
 
-      .tooltip {
-          position: absolute;
-          padding: 8px;
-          background: white;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          pointer-events: none;
-          font-size: 12px;
-          opacity: 0;
-      }
 
-      .area {
-          opacity: 0.7;
-          transition: opacity 0.2s;
-      }
-
-      .area:hover {
-          opacity: 0.9;
-      }
-  </style>
 </head>
 <body>
-<h2>Top Baby Names - Stacked Totals (1998-2000)</h2>
-<div id="chart"></div>
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
+<style>
+    .area-label{
+        /* color:white; */
+        font-family: Arial, Helvetica, sans-serif;
+        fill-opacity: 1;
+        fill: rgb(123, 123, 123);
+        pointer-events: none;
+        stroke:solid 1px black;
+    }
+    body{
+        /* background-color:rgb(48, 48, 48) */
+    }
+    #topgraph{
+        position:absolute;
+        top:33px;
+        z-index:1;
+    }
+    #loadingscreen{
+        width:100%;
+        position:absolute;
+        top:33px;
+        height:90%;
+        /* background-color:grey; */
+        z-index:-1;
+    }
+    #loadingmessage{
+        font-family: Arial, Helvetica, sans-serif;
+        font-size:28px;
+        width:100%;
+        position: absolute;
+        top: 50%;
+        text-align:center;
+    }
+
+    #controls, #buttons{
+        position:absolute;
+        font-family: Arial, Helvetica, sans-serif;
+        width:100%;
+        text-align:center;
+        z-index:1000;
+    }
+    .button{
+        font-size:20px;
+
+    }
+    button{
+        border-radius:3px;
+        border:1px solid black;
+    }
+    #nameinputlabel, #nameinput{
+        font-size:22px
+    }
+    #nameinput{
+        width:170px;
+    }
+    #ttname{
+        font-size:17px;
+    }
+    #ttnumber{
+        font-size:14px;
+        font-weight:normal
+    }
+    .watermark{
+        font-weight:bold;
+        font-family:Arial, Helvetica, sans-serif;
+        color:rgb(0, 0, 62);
+        font-size:14px
+    }
+    #urlcopied{
+        display:none;
+        position: absolute;
+        width:40%;
+        padding:25px;
+        /* height:50px; */
+        margin:0 auto;
+        top:100px;
+        left:30%;
+        background-color:rgba(171, 169, 169,0.8);
+        border-radius:5px;
+        text-align:center;
+        z-index:1010;
+        font-family:Arial, Helvetica, sans-serif;
+        font-size:24px;
+    }
+    #tooltip {
+        position: absolute;
+        width: 150px;
+        height: auto;
+        padding: 10px;
+        font-family:Arial, Helvetica, sans-serif;
+
+        -webkit-border-radius: 10px;
+        -moz-border-radius: 10px;
+        border-radius: 10px;
+        -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        pointer-events: none;
+        line-height: 1;
+        font-weight: bold;
+        color:white;
+        display: none;
+        background: rgba(0, 0, 0, 0.8);
+        z-index:1001;
+    }
+    .male{
+        background: rgba(0,90,180,.8)
+    }
+    .female{
+        background:rgba(180,20,20,.8)
+    }
+    .xaxislabel, .yaxislabel{
+        font-family:Arial, Helvetica, sans-serif;
+        fill:rgb(118, 118, 118);
+        font-size:14px;
+    }
+
+    @media only screen and (max-width: 480px) {
+        #topgraph{
+            position:absolute;
+            top:45px;
+        }
+        #nameinputlabel, #nameinput{
+            font-size:18px
+        }
+        #nameinput{
+            width:150px;
+        }
+        .button{
+            font-size:14px;
+
+        }
+    }
+
+    @media (prefers-color-scheme: dark) {
+        body{
+            background-color:rgb(53, 53, 53);
+            color:white;
+        }
+        .xaxislabel, .yaxislabel, text{
+            fill:white !important;
+        }
+    }
+</style>
+<script src="" async defer></script>
+<!-- Create a div where the graph will take place -->
+<div id="loadingscreen"><div id="loadingmessage" >Loading Dataviz</div></div>
+<div id="controls">
+  <div id="nameinputlabel">Baby Name: <input id="nameinput" type="search" oninput="filternames()" >&nbsp;<button id='share' onclick='generateURL();'><i class="fas fa-share button"> </i></button></div>
+
+  <div id="buttons">
+
+    <input type="radio" id="both" name="sex" value="both" onclick="filternames()"checked>
+    <label for="both">Both</label>
+    <input type="radio" id="boy" name="sex" value="boy" onclick="filternames()">
+    <label for="boy">Boys</label>
+    <input type="radio" id="girl" name="sex" value="girl" onclick="filternames()">
+    <label for="girl">Girls</label><br>
+
+    <input type="radio" id="raw" name="data" value="raw" onclick="filternames()">
+    <label for="raw">Raw births</label>
+    <input type="radio" id="normalized" name="data" value="normalized" onclick="filternames()" checked>
+    <label for="normalized">Normalized (per million)</label>
+    <!-- <div id="name"></div> -->
+  </div>
+</div>
+<div id="topgraph"></div>
+<div id="lowergraph"></div>
+<div id="tooltip"></div>
+<div id="urlcopied">URL copied to browser address bar and clipboard!</div>
+
+
 
 <script>
-  // Set the dimensions and margins
-  const width = 928;
-  const height = 500;
-  const marginTop = 20;
-  const marginRight = 180;
-  const marginBottom = 30;
-  const marginLeft = 60;
 
-  // Create SVG container
-  const svg = d3.select("#chart")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .attr("viewBox", [0, 0, width, height])
-    .attr("style", "max-width: 100%; height: auto;");
+  // set the dimensions and margins of the graph
+  isInIframe = (parent !== window);
+  if (isInIframe){
+    windowheight=$(parent.window).height()-50;
+  } else{
+    windowheight = window.innerHeight-30;
+  }
 
-  d3.csv("https://raw.githubusercontent.com/brycematheson1234/names/refs/heads/master/top_names_by_year_last_8.csv").then(data => {
-      // Transform data for stacking
-      const years = Array.from(new Set(data.map(d => +d.Year)));
-      const names = Array.from(new Set(data.map(d => d.Name)));
+  function removeGraph(){
+    svg.selectAll('*').remove();
+  }
+  // append the svg object to the body of the page
+  function initGraph(){
+    margin = {top:40, right: 30, bottom: 50, left: 50},
+      width = window.innerWidth - margin.left - margin.right,
+      height = windowheight-40 - margin.top - margin.bottom;
+    svg = d3.select("#topgraph")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
 
-      const stackData = years.map(year => {
-        const yearData = {year};
-        data.filter(d => +d.Year === year).forEach(d => {
-          yearData[d.Name] = +d.Count;
-        });
-        return yearData;
-      });
+  }
+  function generateURL(){
+    $("#urlcopied").show()
+    baseurl=thisURL.split("?")[0]
+    urlstring=baseurl;
+    urlstring+="?n=";
+    for (var i=0;i<names.length;i++){
+      if(names[i]!=""){
+        urlstring+=names[i].toLowerCase()+(i<names.length-1?",":"");
+      }
+    }
+    urlstring+="&sex="+(sexfilter=="both"?"b":(sexfilter=="boy"?"m":"f"))
+    urlstring+="&data="+dataformat.slice(0,1)
+    console.log(urlstring);
+    if (isInIframe){
+      window.parent.history.pushState("", "", urlstring);
+    } else {
+      history.pushState("", "", urlstring);
+    }
+    copyToClipboard(urlstring);
+    setTimeout(function(a){$("#urlcopied").hide()},2000);
+  }
+  function copyToClipboard(text) {
+    var $temp = $("<textarea></textarea>");
+    $("body").append($temp);
+    $temp.val(text).select();
+    document.execCommand("copy");
+    $temp.remove();
+  }
+  function parseURL(){
+    //parse URL and set inputs to the right values
 
-      // Create stack generator
-      const stack = d3.stack()
-        .keys(names)
-        .order(d3.stackOrderNone)
-        .offset(d3.stackOffsetNone);
+    isInIframe = (parent !== window);
+    if (isInIframe){
+      thisURL = document.referrer;
+    } else{
+      thisURL = window.location.href;
+    }
 
-      const series = stack(stackData);
+    parseUrl = new URL(thisURL);
+    console.log(parseUrl);
+    listofparams=['n','sex','data'];
+    paramvals=['','',''];
+    for (var i=0;i<listofparams.length;i++){
+      paramvals[i]=parseUrl.searchParams.get(listofparams[i]);
+    }
 
-      // Create scales
-      const x = d3.scaleLinear()
-        .domain(d3.extent(years))
-        .range([marginLeft, width - marginRight]);
+    if (paramvals[0]!=null){
+      $("#nameinput").val(paramvals[0]);
+    }
+    if (paramvals[1]=="m"){
+      $("#boy").prop("checked", true);
+    } else if (paramvals[1]=="f"){
+      $("#girl").prop("checked", true);
+    } else if (paramvals[1]=="b"){
+      $("#both").prop("checked", true);
+    }
+    if (paramvals[2]=="r"){
+      $("#raw").prop("checked", true);
+    } else if (paramvals[2]=="n"){
+      $("#normalized").prop("checked", true);
+    }
 
-      const y = d3.scaleLinear()
-        .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
-        .range([height - marginBottom, marginTop]);
 
-      const color = d3.scaleOrdinal()
-        .domain(names)
-        .range(d3.schemeTableau10);
+  }
 
-      // Create area generator
-      const area = d3.area()
-        .x(d => x(d.data.year))
-        .y0(d => y(d[0]))
-        .y1(d => y(d[1]));
+  function filternames(){
+    includednamelist=[];
+    namestring=$("#nameinput").val();
+    names=namestring.split(",");
+    if(names[names.length-1]==""&&names.length>1){
+      names=names.slice(0,names.length-1);
+    }
+    sexfilter=$('input[name="sex"]:checked').val();
+    dataformat=$('input[name="data"]:checked').val();
 
-      // Add areas
-      const paths = svg.append("g")
-        .selectAll("path")
-        .data(series)
-        .join("path")
-        .attr("class", "area")
-        .attr("fill", d => color(d.key))
-        .attr("d", area);
+    for (var i=0;i<names.length;i++){
+      name=capitalizeFirstLetter(names[i])
 
-      // Add X axis
-      svg.append("g")
-        .attr("transform", `translate(0,${height - marginBottom})`)
-        .call(d3.axisBottom(x)
-          .ticks(3)
-          .tickFormat(d3.format("d")));
+      console.log(name)
 
-      // Add Y axis
-      svg.append("g")
-        .attr("transform", `translate(${marginLeft},0)`)
-        .call(d3.axisLeft(y)
-          .ticks(height / 80))
-        .call(g => g.select(".domain").remove())
-        .call(g => g.selectAll(".tick line").clone()
-          .attr("x2", width - marginLeft - marginRight)
-          .attr("stroke-opacity", 0.1))
-        .call(g => g.append("text")
-          .attr("x", -marginLeft)
-          .attr("y", 10)
-          .attr("fill", "currentColor")
-          .attr("text-anchor", "start")
-          .text("↑ Number of Babies"));
+      console.log(sexfilter)
+      if (name.length>0||names.length==1){
+        if (sexfilter=='both'){
+          includednamelist=includednamelist.concat(fullnamelist.filter(listitem=>listitem.startsWith(name)));
+        } else if (sexfilter=="boy"){
+          includednamelist=includednamelist.concat(fullnamelist.filter(listitem=>(listitem.startsWith(name)&&listitem.split('_')[1]=='M')));
+        } else if (sexfilter=="girl"){
+          includednamelist=includednamelist.concat(fullnamelist.filter(listitem=>(listitem.startsWith(name)&&listitem.split('_')[1]=='F')));
+        }
+      }
 
-      // Add the legend
-      const legend = svg.append("g")
-        .attr("font-family", "sans-serif")
-        .attr("font-size", 10)
-        .attr("text-anchor", "start")
-        .selectAll("g")
-        .data(series)
-        .join("g")
-        .attr("transform", (d, i) => `translate(${width - marginRight + 10},${marginTop + i * 20})`);
+    }
 
-      legend.append("rect")
-        .attr("x", 0)
-        .attr("width", 19)
-        .attr("height", 19)
-        .attr("fill", d => color(d.key));
+    letters=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+    topnames=['James','John','Robert','Michael','William','Mary','David','Joseph','Richard','Charles','Thomas','Christopher','Daniel','Elizabeth','Matthew'];
+    if (namestring.length==0){
+      graphlevel=0;
+    } else {
+      graphlevel=names.length;
+    }
 
-      legend.append("text")
-        .attr("x", 24)
-        .attr("y", 9.5)
-        .attr("dy", "0.35em")
-        .text(d => d.key);
 
-      // Add tooltip
-      const tooltip = d3.select("body").append("div")
-        .attr("class", "tooltip");
+    console.log(graphlevel);
 
-      // Add hover interactions
-      paths
-        .on("mouseover", function (event, d) {
-          d3.select(this).style("opacity", 0.9);
-          tooltip.style("opacity", 1);
-        })
-        .on("mousemove", function (event, d) {
-          const [xPos] = d3.pointer(event);
-          const year = Math.round(x.invert(xPos));
-          const yearData = d.find(p => p.data.year === year);
-          if (yearData) {
-            const value = yearData[1] - yearData[0];
-            tooltip
-              .html(`${d.key} (${year})<br>${d3.format(",")(value)} babies`)
-              .style("left", (event.pageX + 10) + "px")
-              .style("top", (event.pageY - 28) + "px");
+    if (dataformat=="raw"){
+      namedata=newarray;
+      rankarray=rrankarray;
+    } else if (dataformat=="normalized"){
+      namedata=normalizedarray;
+      rankarray=nrankarray;
+    }
+    console.log(includednamelist.length)
+
+
+    removeGraph();
+    makeGraph();
+
+  }
+
+  function subsetData(data){
+    // List of groups = header of the csv files
+    keys = Object.keys(data[0]).slice(1)
+    console.log(keys);
+  }
+
+
+  function makeGraph(){
+    // color palette
+    color = d3.scaleOrdinal()
+      .domain(includednamelist)
+      .range(d3.schemeSet2);
+
+    //stack the data?
+    stackedData = d3.stack()
+      .keys(includednamelist)
+      (namedata)
+    var x = d3.scaleLinear()
+      .domain(d3.extent(namedata, function(d) { return d.year; }))
+      .range([ 0, width ]);
+
+
+
+    // Add Y axis
+
+    yTop=getYMax();
+
+
+    var y = d3.scaleLinear()
+      .domain([0, yTop*1.05])
+      .range([ height, 0 ]);
+
+    // Create the scatter variable: where both the circles and the brush take place
+    var areaChart = svg.append('g')
+      .attr("clip-path", "url(#clip)")
+
+    // Area generator
+    var area = d3.area()
+      .x(function(d) { return x(d.data.year); })
+      .y0(function(d) { return y(d[0]); })
+      .y1(function(d) { return y(d[1]); })
+    $("#tooltip").hide()
+    // tooltip = d3.select("body").append("div")
+    //   .attr("id", "tooltip")
+    //   .style("opacity", 0)
+    tooltip=d3.select("#tooltip")
+
+
+    // Show the areas
+    areaChart
+      .selectAll("mylayers")
+      .data(stackedData)
+      .enter()
+      .append("path")
+      .attr("class", function(d) { return "myArea " + d.key })
+      .style("fill", function(d) {
+        return getColor(d.key)
+      })
+      .style("stroke-width",10)
+      .attr("d", area)
+
+      .on("mouseover", function(d) {
+        // console.log(d.index);
+        $("#tooltip").show()
+        displayname=d.key.split("_")[0];
+        sex=d.key.split("_")[1];
+        year=snapYear(x.invert(d3.mouse(this)[0]))
+        // console.log(year,parseInt(year)+4)
+        numberborn=(d[yearslist.indexOf(year)][1]-d[yearslist.indexOf(year)][0]);
+
+        $("#name").html(`There have been ${origdata[d.index].sum} babies with the name ${displayname} born in the US since 1880 (${d.index} most popular birth name)`);
+        highlight();
+        d3.select("."+d.key).style("opacity", 1)
+        // d[yearslist.indexOf(year)][1];
+        // console.log(d)
+        if (width-d3.event.pageX>140){
+          ttpos=d3.event.pageX;
+        } else {
+          ttpos=d3.event.pageX-160;
+        }
+
+        tooltip
+          // .transition()
+          // .duration(200)
+          .style("opacity", .9)
+        tooltip.html(`<span id='ttname'>${displayname}</span><br><span id='ttnumber'>${numberborn.toLocaleString()} ${(dataformat=='normalized'?'born per million births':(year<2010?'born/yr':'born'))} (Rank: ${rankarray[year].indexOf(numberborn)+1}) in ${parseInt(year)+(year<2000?"s":(year<2010?'-'+(parseInt(year)+4).toString().slice(2,4):''))}</span>`)
+          .style("left", (ttpos ) + "px")
+          .style("top", (d3.event.pageY ) + "px");
+
+      })
+      .on("mousemove", function(d){
+        $("#tooltip").show()
+
+        displayname=d.key.split("_")[0];
+        sex=d.key.split("_")[1];
+        year=snapYear(x.invert(d3.mouse(this)[0]))
+        numberborn=(d[yearslist.indexOf(year)][1]-d[yearslist.indexOf(year)][0]);
+        $("#name").html(`There have been ${origdata[d.index].sum} babies with the name ${displayname} born in the US since 1880 (${d.index} most popular birth name)`);
+        if (width-d3.event.pageX>140){
+          ttpos=d3.event.pageX;
+        } else {
+          ttpos=d3.event.pageX-160;
+        }
+        // console.log(ttpos)
+        tooltip
+          // .transition()
+          .style("opacity", .9)
+        tooltip.html(`<span id='ttname'>${displayname}</span><br><span id='ttnumber'>${numberborn.toLocaleString()} ${(dataformat=='normalized'?'born per million births':(year<2010?'born/yr':'born'))} (Rank: ${rankarray[year].indexOf(numberborn)+1}) in ${parseInt(year)+(year<2000?"s":(year<2010?'-'+(parseInt(year)+4).toString().slice(2,4):''))}</span>`)
+          .style("left", (ttpos ) + "px")
+          .style("top", (d3.event.pageY ) + "px");
+
+
+      })
+      .on("mouseout", function(d) {
+        noHighlight();
+        tooltip
+          .style("opacity", 0)
+          .html("")
+      })
+      .on("click", function(d) {
+        if (width<480){
+          $("#tooltip").show()
+          displayname=d.key.split("_")[0];
+          sex=d.key.split("_")[1];
+          year=snapYear(x.invert(d3.mouse(this)[0]))
+          // console.log(year,parseInt(year)+4)
+          numberborn=(d[yearslist.indexOf(year)][1]-d[yearslist.indexOf(year)][0]);
+
+          $("#name").html(`There have been ${origdata[d.index].sum} babies with the name ${displayname} born in the US since 1880 (${d.index} most popular birth name)`);
+          highlight();
+          d3.select("."+d.key).style("opacity", 1)
+          // d[yearslist.indexOf(year)][1];
+          // console.log(d)
+          if (width-d3.event.pageX>140){
+            ttpos=d3.event.pageX;
+          } else {
+            ttpos=d3.event.pageX-160;
+          }
+
+          tooltip
+            // .transition()
+            // .duration(200)
+            .style("opacity", .9)
+          tooltip.html(`<span id='ttname'>${displayname}</span><br><span id='ttnumber'>${numberborn.toLocaleString()} ${(dataformat=='normalized'?'born per million births':(year<2010?'born/yr':'born'))} in ${parseInt(year)+(year<2000?"s":(year<2010?'-'+(parseInt(year)+4).toString().slice(2,4):''))}</span>`)
+            .style("left", (ttpos ) + "px")
+            .style("top", (d3.event.pageY ) + "px");
+
+        } else {
+          console.log(d)
+          clickname=d.key.split("_")[0]
+          console.log(clickname)
+          $("#nameinput").val(clickname);
+          // includednamelist=[]
+          // includednamelist.push(d.key)
+          filternames();
+          removeGraph();
+          makeGraph();
+        }
+
+      })
+    if (graphlevel>0){
+      const labels = svg.selectAll('text').data(stackedData)
+      labels
+        .enter().append('text')
+        .attr('class', 'area-label namelabel')
+        .merge(labels)
+        .text(function(d){
+          if (graphlevel==0){
+            if (topnames.indexOf(d.key.split("_")[0])>=0){
+              return d.key.split("_")[0]
+            } else {
+              return ""
+            }
+          } else {
+            return d.key.split("_")[0]
           }
         })
-        .on("mouseout", function () {
-          d3.select(this).style("opacity", 0.7);
-          tooltip.style("opacity", 0);
-        });
+        .attr('transform',
+          d3.areaLabel(area)
+            .minHeight(10)
+        )
+    }
 
-      // Add labels for dimensions
-      svg.append("text")
-        .attr("x", width / 2)
-        .attr("y", height - 5)
-        .attr("text-anchor", "middle")
-        .text("Year");
-    }).catch(error => {
-    console.error("Error loading the CSV file:", error);
-    document.getElementById("chart").innerHTML = "Error loading data";
-  });
+
+
+    //make labels find the tallest section of an area graph
+
+    //////////
+    // HIGHLIGHT GROUP //
+    //////////
+
+    // What to do when one group is hovered
+    highlight = function(d){
+      //   console.log(d)
+      // reduce opacity of all groups
+      d3.selectAll(".myArea").style("opacity", .8)
+      // except the one that is hovered
+
+    }
+    var xAxis = svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x).ticks((width>480?10:5), '0.3r'))
+
+    // Add X axis label:
+    svg.append("text")
+      .attr("text-anchor", "end")
+      .attr("x", width/2)
+      .attr("y", height+30 )
+      .attr("class", 'xaxislabel' )
+      .text("Year");
+    svg.append("text")
+      .attr("text-anchor", "end")
+      .attr("x", width)
+      .attr("y", (width<400?height+40:height+30) )
+      .attr("class", 'watermark' )
+      .text("engaging-data.com");
+
+    svg.append("g")
+      .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format(".2s")))
+    // Add Y axis label:
+    svg.append("text")
+      .attr("text-anchor", "end")
+      .attr("x", -height/2-40)
+      .attr("y", -40 )
+      .attr("class", 'yaxislabel' )
+      .text((dataformat=='normalized'?"number per 1M births":"number of births"))
+      .attr("text-anchor", "start")
+      .attr("transform", "rotate(-90)");
+
+    // And when it is not hovered anymore
+    noHighlight = function(d){
+      d3.selectAll(".myArea").style("opacity", 1)
+    }
+
+    $(window).resize(function(){
+      setTimeout(function(a){console.log("resize");d3.select("svg").remove();initGraph();makeGraph();},300)
+    });
+    $("#loadingscreen").hide();
+  }
+
+  function getColor(name_sex){
+    var name=name_sex.split("_")[0]
+    var sex=name_sex.split("_")[1]
+    sum= origdata.filter(nameobj=>nameobj.name==name&&nameobj.sex==sex)[0]['sum'];
+    // console.log(sum);
+    if (sex=="M"){
+      // var r=parseInt(203-Math.min(203,sum/20000*203))
+      // var g=90+parseInt(130-Math.min(130,sum/20000*130));
+      // var b=180;
+      var r=0
+      var g=98
+      var b=163
+      var a=Math.min(1,sum/1000000+.4);
+    } else {
+      // var r=180
+      // var g=parseInt(150-Math.min(150,sum/20000*150));
+      // var b=g+(Math.random()-.5)*10;
+      var r=163
+      var g=62
+      var b=62
+      a=Math.min(1,sum/1000000+.4);
+    }
+    return `rgba(${r},${g},${b},${a})`
+  }
+  function getYMax(){
+    //make array by year
+    var tmparray=fillArray(yearslist.length,0);
+    //put sum of names in each year
+    for (var i=0;i<stackedData.length;i++){
+      //each array element is a name (with all years)
+      for (var j=0;j<stackedData[i].length;j++){
+        tmparray[j]+=stackedData[i][j][1]-stackedData[i][j][0]
+        //each year calculates the sum of number of names (i.e. total births each year)
+      }
+    }
+    return maxArray(tmparray)
+
+    // console.log(tmparray);
+
+  }
+  // Parse the Data
+
+  initGraph();
+  parseURL();
+  d3.csv("https://raw.githubusercontent.com/brycematheson1234/names/refs/heads/master/babynames_ssa_6k.csv", function(data) {
+    origdata=data.slice(0,6500);
+    origdata.sort((a,b)=> (a.name > b.name ? 1 : -1))
+    //create ranking list
+
+    console.log(origdata)
+    yearslist=Object.keys(origdata[0])
+    yearslist.pop();
+    yearslist.pop();
+    yearslist.pop();
+    // for (var i=0;i<origdata.length;i++){
+    //   tmpsum=0;
+    //   for (var j=0;j<yearslist.length;j++){
+    //     tmpsum+=parseInt(origdata[i][yearslist[j]]);
+    //   }
+    //   origdata[i]['sum']=tmpsum;
+    // }
+    newarray=[];
+    normalizedarray=[];
+    for (var j=0;j<yearslist.length;j++){
+      newarray.push({'year':yearslist[j]})
+      normalizedarray.push({'year':yearslist[j]})
+      for (var i=0;i<origdata.length;i++){
+        if (origdata[i]['sex']=="M"){
+          yr_norm_factor=1e6/2/aggMbirths[j];
+        } else {
+          yr_norm_factor=1e6/2/aggFbirths[j];
+        }
+
+        newarray[j][origdata[i]['name']+"_"+origdata[i]['sex']]=parseInt(origdata[i][yearslist[j]]);
+        normalizedarray[j][origdata[i]['name']+"_"+origdata[i]['sex']]=parseInt(origdata[i][yearslist[j]]*yr_norm_factor);
+      }
+    }
+
+    fullnamelist=Object.keys(normalizedarray[0]).slice(1);
+    nrankarray={}
+    for (j=0;j<normalizedarray.length;j++){
+      // for (i=0;i<fullnamelist.length;i++){
+      tmparray=Object.values(normalizedarray[j]);
+      nrankarray[tmparray[0]]=tmparray.slice(1,).sort((a,b)=> (a > b ? -1 : 1))
+      // }
+    }
+    rrankarray={}
+    for (j=0;j<newarray.length;j++){
+      // for (i=0;i<fullnamelist.length;i++){
+      tmparray=Object.values(newarray[j]);
+      rrankarray[tmparray[0]]=tmparray.slice(1,).sort((a,b)=> (a > b ? -1 : 1))
+      // }
+    }
+
+
+
+    // newarray.pop();
+    namedata=normalizedarray;
+    includednamelist=fullnamelist.slice();
+    //////////
+    // GENERAL //
+    //////////
+
+    // subsetData(namedata);
+
+    filternames();
+    // makeGraph();
+    $(window).resize(function(){console.log("resize");makeGraph();});
+
+
+    //////////
+    // AXIS //
+    //////////
+
+    // Add X axis
+
+    // Add the brushing
+    //   areaChart
+    //     .append("g")
+    //       .attr("class", "brush")
+    //       .call(brush);
+
+    //   var idleTimeout
+    //   function idled() { idleTimeout = null; }
+
+    // A function that update the chart for given boundaries
+    //   function updateChart() {
+
+    //     extent = d3.event.selection
+
+    //     // If no selection, back to initial coordinate. Otherwise, update X axis domain
+    //     if(!extent){
+    //       if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+    //       x.domain(d3.extent(data, function(d) { return d.year; }))
+    //     }else{
+    //       x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+    //       areaChart.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+    //     }
+
+    //     // Update axis and area position
+    //     xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks(5))
+    //     areaChart
+    //       .selectAll("path")
+    //       .transition().duration(1000)
+    //       .attr("d", area)
+    //     }
+
+
+
+
+
+
+
+    //////////
+    // LEGEND //
+    //////////
+
+    // Add one dot in the legend for each name.
+    // var size = 20
+    // svg.selectAll("myrect")
+    //   .data(keys)
+    //   .enter()
+    //   .append("rect")
+    //     .attr("x", 400)
+    //     .attr("y", function(d,i){ return 10 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+    //     .attr("width", size)
+    //     .attr("height", size)
+    //     .style("fill", function(d){ return color(d)})
+    //     .on("mouseover", highlight)
+    //     .on("mouseleave", noHighlight)
+
+    // // Add one dot in the legend for each name.
+    // svg.selectAll("mylabels")
+    //   .data(keys)
+    //   .enter()
+    //   .append("text")
+    //     .attr("x", 400 + size*1.2)
+    //     .attr("y", function(d,i){ return 10 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+    //     .style("fill", function(d){ return color(d)})
+    //     .text(function(d){ return d})
+    //     .attr("text-anchor", "left")
+    //     .style("alignment-baseline", "middle")
+    //     .on("mouseover", highlight)
+    //     .on("mouseleave", noHighlight)
+
+  })
+
+  function snapYear(year){
+    tmpdist=100;
+    for (var i=0;i<yearslist.length;i++){
+      if (Math.abs(year-yearslist[i])<tmpdist){
+        snapyear=yearslist[i];
+        tmpdist=Math.abs(year-yearslist[i]);
+      }
+    }
+    return snapyear
+  }
+
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  }
+
+  function getLargerWedges(){
+    //look at stacked data, height and yTop to see the size of the wedges
+    minHeight=20;
+    minBirths=minHeight*yTop/height
+    for (var i=0;i<stackedData.length;i++){
+      var tmpname=stackedData[i].key;
+
+    }
+  }
+
+  $(document).ready(function(){
+    window.parent.document.getElementById('vizframe').height = windowheight+50+'px';
+  })
+
 </script>
 </body>
 </html>

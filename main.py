@@ -48,10 +48,10 @@ def process_names_files(directory_path, output_file, top_n=10, year_range=None):
 
 # Usage examples:
 directory_path = '/Users/bryce/personal/names/raw'
-output_file = '/Users/bryce/personal/names/top_names_by_year_last_8.csv'
+output_file = '/Users/bryce/personal/names/top_names_by_year_last_4.csv'
 
 # Process all names from 2000-2023
-process_names_files(directory_path, output_file, top_n=10, year_range='2015-2023')
+process_names_files(directory_path, output_file, top_n=5, year_range='2018-2023')
 
 # Process top 100 names from 2000-2023
 # process_names_files(directory_path, output_file, top_n=100, year_range='2000-2023')
